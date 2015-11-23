@@ -1,0 +1,16 @@
+plugins {
+    id 'java'
+    id 'idea'
+    id 'net.ltgt.apt' version '0.4'
+}
+
+repositories {
+    jcenter()
+    mavenLocal()
+}
+
+dependencies {
+    compile 'org.functionaljava:functionaljava-java8:4.4'
+    compileOnly 'org.derive4j:derive4j-annotation:0.6-SNAPSHOT'
+    apt 'org.derive4j:derive4j:0.6-SNAPSHOT'
+}
