@@ -2,74 +2,85 @@ package com.datatyped;
 
 import fj.F0;
 import fj.F4;
+import fj.Ord;
 import org.derive4j.Data;
+import org.derive4j.Derive;
 import org.derive4j.Flavour;
 
 import static com.datatyped.LeftistHeaps.*;
 
-@Data(flavour = Flavour.FJ)
-public abstract class LeftistHeap<A extends Comparable<A>> implements Heap<A, LeftistHeap<A>> {
-    public abstract <X> X match(
-        F0<X> E,
-        F4<Integer, A, LeftistHeap<A>, LeftistHeap<A>, X> T
-    );
+public final class LeftistHeap<A> implements Heap<A, LeftistHeap.Heap<A>> {
+    private final Ord<A> ord;
 
-    private Integer rank() {
-        return match(
+    public LeftistHeap(final Ord<A> ord) {
+        this.ord = ord;
+    }
+
+    @Data(value = @Derive(inClass = "LeftistHeaps"), flavour = Flavour.FJ)
+    public interface Heap<A> {
+        <X> X match(
+            F0<X> E,
+            F4<Integer, A, Heap<A>, Heap<A>, X> T
+        );
+    }
+
+    private Integer rank(Heap<A> h) {
+        return h.match(
             () -> 0,
             (r, x, a, b) -> r
         );
     }
 
-    private LeftistHeap<A> makeT(A x, LeftistHeap<A> t) {
-        if (rank() >= t.rank()) return T(t.rank() + 1, x, this, t);
-        else return T(rank() + 1, x, t, this);
+    private Heap<A> makeT(A x, Heap<A> a, Heap<A> b) {
+        if (rank(a) >= rank(b)) return T(rank(b) + 1, x, a, b);
+        else return T(rank(a) + 1, x, b, a);
     }
 
-    public static <A extends Comparable<A>> LeftistHeap<A> empty() {
+    @Override
+    public Heap<A> empty() {
         return E();
     }
 
     @Override
-    public boolean isEmpty() {
-        return match(
+    public boolean isEmpty(Heap<A> h) {
+        return h.match(
             () -> true,
             (r, x, a, b) -> false
         );
     }
 
     @Override
-    public LeftistHeap<A> insert(A x) {
-        return merge(T(1, x, E(), E()));
+    public Heap<A> insert(A x, Heap<A> h) {
+        return merge(T(1, x, E(), E()), h);
     }
 
     @Override
-    public LeftistHeap<A> merge(LeftistHeap<A> t) {
-        return match(
-            () -> t,
-            (r1, x, a1, b1) -> t.match(
-                () -> this,
+    public Heap<A> merge(Heap<A> h1, Heap<A> h2) {
+        return h1.match(
+            () -> h2,
+            (r1, x, a1, b1) -> h2.match(
+                () -> h1,
                 (r2, y, a2, b2) -> {
-                    if (x.compareTo(y) <= 0) return a1.makeT(x, t.merge(b1));
-                    else return a2.makeT(y, merge(b2));
+                    if (ord.isGreaterThan(y, x)) return makeT(y, a2, merge(h1, b2));
+                    else return makeT(x, a1, merge(b1, h2));
                 }
             )
         );
     }
 
     @Override
-    public A findMin() {
-        return match(
+    public A findMin(Heap<A> h) {
+        return h.match(
             () -> { throw new IllegalArgumentException("LeftistHeap.findMin: empty heap"); },
             (r, x, a, b) -> x
         );
     }
 
     @Override
-    public LeftistHeap<A> deleteMin() {
-        return match(
+    public Heap<A> deleteMin(Heap<A> h) {
+        return h.match(
             () -> { throw new IllegalArgumentException("LeftistHeap.deleteMin: empty heap"); },
-            (r, x, a, b) -> a.merge(b)
+            (r, x, a, b) -> merge(a, b)
         );
     }
 }

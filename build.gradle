@@ -6,11 +6,10 @@ plugins {
 
 repositories {
     jcenter()
-    mavenLocal()
 }
 
 dependencies {
-    compile 'org.functionaljava:functionaljava-java8:4.4'
-    compileOnly 'org.derive4j:derive4j-annotation:0.6-SNAPSHOT'
-    apt 'org.derive4j:derive4j:0.6-SNAPSHOT'
+    compile 'org.functionaljava:functionaljava-java8:latest.release'
+    compileOnly 'org.derive4j:derive4j-annotation:latest.release'
+    apt 'org.derive4j:derive4j:latest.release'
 }
