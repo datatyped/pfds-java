@@ -26,11 +26,11 @@ public final class SplayHeap<A>  implements Heap<A, SplayHeap.Heap<A>> {
         return h.match(
             () -> P.p(E(), E()),
             (a, x, b) -> {
-                if (ord.isGreaterThan(pivot, x)) {
+                if (ord.isGreaterThan(x, pivot)) {
                     return a.match(
                         () -> P.p(E(), h),
                         (a1, y, a2) -> {
-                            if (ord.isGreaterThan(pivot, y)) {
+                            if (ord.isGreaterThan(y, pivot)) {
                                 P2<Heap<A>, Heap<A>> p = partition(pivot, a1);
                                 return P.p(p._1(), T(p._2(), y, T(a2, x, b)));
                             } else {
@@ -43,7 +43,7 @@ public final class SplayHeap<A>  implements Heap<A, SplayHeap.Heap<A>> {
                     return b.match(
                         () ->  P.p(h, E()),
                         (b1, y, b2) -> {
-                            if (ord.isGreaterThan(pivot, y)) {
+                            if (ord.isGreaterThan(y, pivot)) {
                                 P2<Heap<A>, Heap<A>> p = partition(pivot, b1);
                                 return P.p(T(a, x, p._1()), T(p._2(), y, b2));
                             } else {

@@ -61,7 +61,7 @@ public final class LeftistHeap<A> implements Heap<A, LeftistHeap.Heap<A>> {
             (r1, x, a1, b1) -> h2.match(
                 () -> h1,
                 (r2, y, a2, b2) -> {
-                    if (ord.isGreaterThan(y, x)) return makeT(y, a2, merge(h1, b2));
+                    if (ord.isGreaterThan(x, y)) return makeT(y, a2, merge(h1, b2));
                     else return makeT(x, a1, merge(b1, h2));
                 }
             )

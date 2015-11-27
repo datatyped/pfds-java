@@ -12,4 +12,6 @@ dependencies {
     compile 'org.functionaljava:functionaljava-java8:latest.release'
     compileOnly 'org.derive4j:derive4j-annotation:latest.release'
     apt 'org.derive4j:derive4j:latest.release'
+    testCompile 'junit:junit:4.12'
+    testCompile 'org.assertj:assertj-core:3.2.0'
 }
