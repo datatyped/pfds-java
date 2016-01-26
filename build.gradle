@@ -1,7 +1,7 @@
 plugins {
     id 'java'
     id 'idea'
-    id 'net.ltgt.apt' version '0.4'
+    id 'net.ltgt.apt' version '0.5'
 }
 
 repositories {
@@ -13,5 +13,5 @@ dependencies {
     compileOnly 'org.derive4j:derive4j-annotation:latest.release'
     apt 'org.derive4j:derive4j:latest.release'
     testCompile 'junit:junit:4.12'
-    testCompile 'org.assertj:assertj-core:3.2.0'
+    testCompile 'org.assertj:assertj-core:3.3.0'
 }

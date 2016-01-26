@@ -5,7 +5,6 @@ import fj.F4;
 import fj.Ord;
 import org.derive4j.Data;
 import org.derive4j.Derive;
-import org.derive4j.Flavour;
 
 import static com.datatyped.LeftistHeaps.*;
 
@@ -16,7 +15,7 @@ public final class LeftistHeap<A> implements Heap<A, LeftistHeap.Heap<A>> {
         this.ord = ord;
     }
 
-    @Data(value = @Derive(inClass = "LeftistHeaps"), flavour = Flavour.FJ)
+    @Data(@Derive(inClass = "LeftistHeaps"))
     public interface Heap<A> {
         <X> X match(
             F0<X> E,

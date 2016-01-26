@@ -1,31 +1,38 @@
 package com.datatyped;
 
 import fj.*;
+import fj.data.List;
 import org.derive4j.Data;
 import org.derive4j.Derive;
 import org.derive4j.FieldNames;
-import org.derive4j.Flavour;
 
 import static com.datatyped.BootstrapHeaps.*;
 import static fj.Ord.ord;
 
 public final class BootstrapHeap<A> implements Heap<A, BootstrapHeap.Heap<A>> {
     private final Ord<A> ord;
-    private final LeftistHeap<Heap<A>> primH;
+    private final SkewBinomialHeap<Heap<A>> primH;
 
-    public BootstrapHeap(Ord<A> ord, F<Ord<Heap<A>>, LeftistHeap<Heap<A>>> makeH) {
+    public BootstrapHeap(Ord<A> ord) {
         this.ord = ord;
-        this.primH = makeH.f(ord(e1 -> e2 ->
-            getElem(e1).bind(getElem(e2), x -> y -> ord.compare(x, y)).some()
+        this.primH = new SkewBinomialHeap<>(ord(h1 -> h2 ->
+            h1.match(
+                () -> h2.match(
+                    () -> Ordering.EQ,
+                    (y, p2) -> Ordering.LT),
+                (x, p1) -> h2.match(
+                    () -> Ordering.GT,
+                    (y, p2) -> ord.compare(x, y))
+            )
         ));
     }
 
-    @Data(value = @Derive(inClass = "BootstrapHeaps"), flavour = Flavour.FJ)
+    @Data(@Derive(inClass = "BootstrapHeaps"))
     public interface Heap<A> {
         <X> X match(
             F0<X> E,
             @FieldNames({"elem", "primH"})
-            F2<A, LeftistHeap.Heap<Heap<A>>, X> H
+            F2<A, List<SkewBinomialHeap.Tree<Heap<A>>>, X> H
         );
     }
 

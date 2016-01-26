@@ -3,7 +3,6 @@ package com.datatyped;
 import fj.*;
 import org.derive4j.Data;
 import org.derive4j.Derive;
-import org.derive4j.Flavour;
 
 import static com.datatyped.SplayHeaps.*;
 
@@ -14,7 +13,7 @@ public final class SplayHeap<A>  implements Heap<A, SplayHeap.Heap<A>> {
         this.ord = ord;
     }
 
-    @Data(value = @Derive(inClass = "SplayHeaps"), flavour = Flavour.FJ)
+    @Data(@Derive(inClass = "SplayHeaps"))
     public interface Heap<A> {
         <X> X match(
             F0<X> E,

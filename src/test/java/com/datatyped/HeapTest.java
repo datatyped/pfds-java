@@ -1,6 +1,7 @@
 package com.datatyped;
 
 import fj.Ord;
+import fj.data.List;
 import org.junit.Test;
 
 import static org.assertj.core.api.Assertions.*;
@@ -8,7 +9,8 @@ import static org.assertj.core.api.Assertions.*;
 public class HeapTest {
     LeftistHeap<Integer> leftistHeap = new LeftistHeap<>(Ord.intOrd);
     SplayHeap<Integer> splayHeap = new SplayHeap<>(Ord.intOrd);
-    BootstrapHeap<Integer> bootstrapHeap = new BootstrapHeap<>(Ord.intOrd, LeftistHeap::new);
+    SkewBinomialHeap<Integer> skewBinomialHeap = new SkewBinomialHeap<>(Ord.intOrd);
+    BootstrapHeap<Integer> bootstrapHeap = new BootstrapHeap<>(Ord.intOrd);
 
     @Test
     public void leftistHeapTest() {
@@ -28,6 +30,16 @@ public class HeapTest {
         assertThat(splayHeap.isEmpty(h)).isFalse();
         h = splayHeap.insert(1, h);
         assertThat(splayHeap.findMin(h)).isEqualTo(1);
+    }
+
+    @Test
+    public void skewBinomialHeapTest() {
+        List<SkewBinomialHeap.Tree<Integer>> h = skewBinomialHeap.empty();
+        assertThat(skewBinomialHeap.isEmpty(h)).isTrue();
+        h = skewBinomialHeap.insert(10, h);
+        assertThat(skewBinomialHeap.isEmpty(h)).isFalse();
+        h = skewBinomialHeap.insert(1, h);
+        assertThat(skewBinomialHeap.findMin(h)).isEqualTo(1);
     }
 
     @Test
