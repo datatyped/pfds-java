@@ -1,39 +1,49 @@
 package com.datatyped;
 
-import fj.*;
-import fj.data.List;
+import javaslang.Function0;
+import javaslang.Function2;
+import javaslang.collection.List;
 import org.derive4j.Data;
 import org.derive4j.Derive;
 import org.derive4j.FieldNames;
 
+import java.util.Comparator;
+
 import static com.datatyped.BootstrapHeaps.*;
-import static fj.Ord.ord;
 
 public final class BootstrapHeap<A> implements Heap<A, BootstrapHeap.Heap<A>> {
-    private final Ord<A> ord;
+    private final Comparator<A> comparator;
     private final SkewBinomialHeap<Heap<A>> primH;
-
-    public BootstrapHeap(Ord<A> ord) {
-        this.ord = ord;
-        this.primH = new SkewBinomialHeap<>(ord(h1 -> h2 ->
-            h1.match(
-                () -> h2.match(
-                    () -> Ordering.EQ,
-                    (y, p2) -> Ordering.LT),
-                (x, p1) -> h2.match(
-                    () -> Ordering.GT,
-                    (y, p2) -> ord.compare(x, y))
-            )
-        ));
-    }
 
     @Data(@Derive(inClass = "BootstrapHeaps"))
     public interface Heap<A> {
         <X> X match(
-            F0<X> E,
+            Function0<X> E,
             @FieldNames({"elem", "primH"})
-            F2<A, List<SkewBinomialHeap.Tree<Heap<A>>>, X> H
+            Function2<A, List<SkewBinomialHeap.Tree<Heap<A>>>, X> H
         );
+    }
+
+    private BootstrapHeap(Comparator<A> comparator) {
+        this.comparator = comparator;
+        this.primH = SkewBinomialHeap.create((h1, h2) ->
+            h1.match(
+                () -> h2.match(
+                    () -> 0,
+                    (y, p2) -> -1),
+                (x, p1) -> h2.match(
+                    () -> 1,
+                    (y, p2) -> comparator.compare(x, y))
+            )
+        );
+    }
+
+    public static <A> BootstrapHeap<A> create(Comparator<A> comparator) {
+        return new BootstrapHeap<A>(comparator);
+    }
+
+    public static <A extends Comparable<A>> BootstrapHeap<A> create() {
+        return new BootstrapHeap<A>(Comparator.naturalOrder());
     }
 
     @Override
@@ -61,7 +71,7 @@ public final class BootstrapHeap<A> implements Heap<A, BootstrapHeap.Heap<A>> {
             (x, p1) -> h2.match(
                 () -> h1,
                 (y, p2) -> {
-                    if (ord.isGreaterThan(x, y)) return H(y, primH.insert(h1, p2));
+                    if (comparator.compare(x, y) > 1) return H(y, primH.insert(h1, p2));
                     else return H(x, primH.insert(h2, p1));
                 }
             )

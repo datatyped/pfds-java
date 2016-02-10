@@ -1,16 +1,17 @@
 package com.datatyped;
 
-import fj.Ord;
-import fj.data.List;
+import javaslang.collection.List;
 import org.junit.Test;
+
+import java.util.Comparator;
 
 import static org.assertj.core.api.Assertions.*;
 
 public class HeapTest {
-    LeftistHeap<Integer> leftistHeap = new LeftistHeap<>(Ord.intOrd);
-    SplayHeap<Integer> splayHeap = new SplayHeap<>(Ord.intOrd);
-    SkewBinomialHeap<Integer> skewBinomialHeap = new SkewBinomialHeap<>(Ord.intOrd);
-    BootstrapHeap<Integer> bootstrapHeap = new BootstrapHeap<>(Ord.intOrd);
+    LeftistHeap<Integer> leftistHeap = LeftistHeap.create();
+    SplayHeap<Integer> splayHeap = SplayHeap.create();
+    SkewBinomialHeap<Integer> skewBinomialHeap = SkewBinomialHeap.create();
+    BootstrapHeap<Integer> bootstrapHeap = BootstrapHeap.create();
 
     @Test
     public void leftistHeapTest() {

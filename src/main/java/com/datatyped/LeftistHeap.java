@@ -1,26 +1,35 @@
 package com.datatyped;
 
-import fj.F0;
-import fj.F4;
-import fj.Ord;
+import javaslang.Function0;
+import javaslang.Function4;
 import org.derive4j.Data;
 import org.derive4j.Derive;
+
+import java.util.Comparator;
 
 import static com.datatyped.LeftistHeaps.*;
 
 public final class LeftistHeap<A> implements Heap<A, LeftistHeap.Heap<A>> {
-    private final Ord<A> ord;
-
-    public LeftistHeap(final Ord<A> ord) {
-        this.ord = ord;
-    }
+    private final Comparator<A> comparator;
 
     @Data(@Derive(inClass = "LeftistHeaps"))
     public interface Heap<A> {
         <X> X match(
-            F0<X> E,
-            F4<Integer, A, Heap<A>, Heap<A>, X> T
+            Function0<X> E,
+            Function4<Integer, A, Heap<A>, Heap<A>, X> T
         );
+    }
+
+    private LeftistHeap(final Comparator<A> comparator) {
+        this.comparator = comparator;
+    }
+
+    public static <A> LeftistHeap<A> create(Comparator<A> comparator) {
+        return new LeftistHeap<A>(comparator);
+    }
+
+    public static <A extends Comparable<A>> LeftistHeap<A> create() {
+        return new LeftistHeap<A>(Comparator.naturalOrder());
     }
 
     private Integer rank(Heap<A> h) {
@@ -60,7 +69,7 @@ public final class LeftistHeap<A> implements Heap<A, LeftistHeap.Heap<A>> {
             (r1, x, a1, b1) -> h2.match(
                 () -> h1,
                 (r2, y, a2, b2) -> {
-                    if (ord.isGreaterThan(x, y)) return makeT(y, a2, merge(h1, b2));
+                    if (comparator.compare(x, y) > 0) return makeT(y, a2, merge(h1, b2));
                     else return makeT(x, a1, merge(b1, h2));
                 }
             )
