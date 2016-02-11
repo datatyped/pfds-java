@@ -4,6 +4,7 @@ import javaslang.Function0;
 import javaslang.Function4;
 import org.derive4j.Data;
 import org.derive4j.Derive;
+import org.derive4j.Flavour;
 
 import java.util.Comparator;
 
@@ -12,7 +13,7 @@ import static com.datatyped.LeftistHeaps.*;
 public final class LeftistHeap<A> implements Heap<A, LeftistHeap.Heap<A>> {
     private final Comparator<A> comparator;
 
-    @Data(@Derive(inClass = "LeftistHeaps"))
+    @Data(value = @Derive(inClass = "LeftistHeaps"), flavour = Flavour.Javaslang)
     public interface Heap<A> {
         <X> X match(
             Function0<X> E,

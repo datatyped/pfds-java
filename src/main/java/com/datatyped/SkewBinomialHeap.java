@@ -7,6 +7,7 @@ import javaslang.collection.List;
 import org.derive4j.Data;
 import org.derive4j.Derive;
 import org.derive4j.FieldNames;
+import org.derive4j.Flavour;
 
 import java.util.Comparator;
 
@@ -15,7 +16,7 @@ import static com.datatyped.SkewBinomialHeaps.*;
 public final class SkewBinomialHeap<A> implements Heap<A, List<SkewBinomialHeap.Tree<A>>> {
     private final Comparator<A> comparator;
 
-    @Data(@Derive(inClass = "SkewBinomialHeaps"))
+    @Data(value = @Derive(inClass = "SkewBinomialHeaps"), flavour = Flavour.Javaslang)
     public interface Tree<A> {
         <X> X match(
             @FieldNames({"rank", "root", "elements", "children"})

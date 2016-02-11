@@ -15,7 +15,7 @@ import static com.datatyped.SplayHeaps.*;
 public final class SplayHeap<A>  implements Heap<A, SplayHeap.Heap<A>> {
     private final Comparator<A> comparator;
 
-    @Data(@Derive(inClass = "SplayHeaps"))
+    @Data(value = @Derive(inClass = "SplayHeaps"), flavour = Flavour.Javaslang)
     public interface Heap<A> {
         <X> X match(
             Function0<X> E,

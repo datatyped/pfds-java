@@ -6,6 +6,7 @@ import javaslang.collection.List;
 import org.derive4j.Data;
 import org.derive4j.Derive;
 import org.derive4j.FieldNames;
+import org.derive4j.Flavour;
 
 import java.util.Comparator;
 
@@ -15,7 +16,7 @@ public final class BootstrapHeap<A> implements Heap<A, BootstrapHeap.Heap<A>> {
     private final Comparator<A> comparator;
     private final SkewBinomialHeap<Heap<A>> primH;
 
-    @Data(@Derive(inClass = "BootstrapHeaps"))
+    @Data(value = @Derive(inClass = "BootstrapHeaps"), flavour = Flavour.Javaslang)
     public interface Heap<A> {
         <X> X match(
             Function0<X> E,

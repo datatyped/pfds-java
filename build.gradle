@@ -10,8 +10,8 @@ repositories {
 
 dependencies {
     compile 'com.javaslang:javaslang:latest.release'
-    compileOnly 'org.derive4j:derive4j-annotation:latest.release'
-    apt 'org.derive4j:derive4j:latest.release'
+    compileOnly 'org.derive4j:derive4j-annotation:0.6.3'
+    apt 'org.derive4j:derive4j:0.6.3'
     testCompile 'junit:junit:4.12'
     testCompile 'org.assertj:assertj-core:3.3.0'
 }
