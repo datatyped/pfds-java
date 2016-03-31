@@ -2,6 +2,7 @@ out
 lib
 logs
 build
+generated/
 .settings/
 .project
 .classpath
