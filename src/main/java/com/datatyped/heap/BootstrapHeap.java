@@ -1,4 +1,4 @@
-package com.datatyped;
+package com.datatyped.heap;
 
 import javaslang.Function0;
 import javaslang.Function2;
@@ -10,7 +10,7 @@ import org.derive4j.Flavour;
 
 import java.util.Comparator;
 
-import static com.datatyped.BootstrapHeaps.*;
+import static com.datatyped.heap.BootstrapHeaps.*;
 
 public final class BootstrapHeap<A> implements Heap<A, BootstrapHeap.Heap<A>> {
     private final Comparator<A> comparator;

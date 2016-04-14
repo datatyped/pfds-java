@@ -8,9 +8,16 @@ repositories {
     jcenter()
 }
 
+idea {
+    module {
+        generatedSourceDirs += file("$projectDir/src/generated/main/java")
+    }
+}
+
 dependencies {
     apt 'org.derive4j:derive4j:0.7'
-    compile 'io.javaslang:javaslang:2.0.1'
+    compile 'io.javaslang:javaslang:2.0.2'
+    compile 'io.javaslang:javaslang-pure:2.0.2'
     compileOnly 'org.derive4j:derive4j-annotation:0.7'
     testCompile 'junit:junit:4.12'
     testCompile 'org.assertj:assertj-core:3.4.0'

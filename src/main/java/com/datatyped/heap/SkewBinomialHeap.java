@@ -1,4 +1,4 @@
-package com.datatyped;
+package com.datatyped.heap;
 
 import javaslang.Function4;
 import javaslang.Tuple;
@@ -11,7 +11,7 @@ import org.derive4j.Flavour;
 
 import java.util.Comparator;
 
-import static com.datatyped.SkewBinomialHeaps.*;
+import static com.datatyped.heap.SkewBinomialHeaps.*;
 
 public final class SkewBinomialHeap<A> implements Heap<A, List<SkewBinomialHeap.Tree<A>>> {
     private final Comparator<A> comparator;

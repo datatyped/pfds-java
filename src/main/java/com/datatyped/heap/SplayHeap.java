@@ -1,4 +1,4 @@
-package com.datatyped;
+package com.datatyped.heap;
 
 import javaslang.Function0;
 import javaslang.Function3;
@@ -10,7 +10,7 @@ import org.derive4j.Flavour;
 
 import java.util.Comparator;
 
-import static com.datatyped.SplayHeaps.*;
+import static com.datatyped.heap.SplayHeaps.*;
 
 public final class SplayHeap<A>  implements Heap<A, SplayHeap.Heap<A>> {
     private final Comparator<A> comparator;

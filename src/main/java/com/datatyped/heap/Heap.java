@@ -1,4 +1,4 @@
-package com.datatyped;
+package com.datatyped.heap;
 
 public interface Heap<A, T> {
     T empty();

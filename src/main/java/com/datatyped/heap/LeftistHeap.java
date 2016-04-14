@@ -1,4 +1,4 @@
-package com.datatyped;
+package com.datatyped.heap;
 
 import javaslang.Function0;
 import javaslang.Function4;
@@ -8,7 +8,7 @@ import org.derive4j.Flavour;
 
 import java.util.Comparator;
 
-import static com.datatyped.LeftistHeaps.*;
+import static com.datatyped.heap.LeftistHeaps.*;
 
 public final class LeftistHeap<A> implements Heap<A, LeftistHeap.Heap<A>> {
     private final Comparator<A> comparator;

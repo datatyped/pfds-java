@@ -1,11 +1,9 @@
-package com.datatyped;
+package com.datatyped.heap;
 
 import javaslang.collection.List;
 import org.junit.Test;
 
-import java.util.Comparator;
-
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class HeapTest {
     LeftistHeap<Integer> leftistHeap = LeftistHeap.create();
