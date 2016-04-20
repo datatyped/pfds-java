@@ -2,24 +2,27 @@ package com.datatyped.tree;
 
 import javaslang.*;
 import javaslang.algebra.Monoid;
+import javaslang.collection.Foldable;
 import javaslang.collection.List;
+import javaslang.control.Option;
 import org.derive4j.Data;
 import org.derive4j.FieldNames;
 import org.derive4j.Flavour;
 
 import java.util.NoSuchElementException;
+import java.util.function.BiFunction;
+import java.util.function.Predicate;
 
 import static com.datatyped.tree.Nodes.*;
 import static com.datatyped.tree.Digits.*;
 import static com.datatyped.tree.FingerTrees.*;
-import static com.datatyped.tree.Views.*;
 
 public class FingerTreeModule<A, M> {
     private final Monoid<M> monoid;
     private final Function1<A, M> measure;
 
     @Data(flavour = Flavour.Javaslang)
-    public interface Node<A, M> {
+    public interface Node<A, M> extends Foldable<A> {
         <X> X match(
             @FieldNames({"v", "a", "b"})
             Function3<M, A, A, X> node2,
@@ -27,18 +30,40 @@ public class FingerTreeModule<A, M> {
             Function4<M, A, A, A, X> node3
         );
 
-        default <T> T foldRight(Function2<T, A, T> f, T acc) {
+        default <U> U foldLeft(U zero, BiFunction<? super U, ? super A, ? extends U> combine) {
             return match(
-                (v, a, b) -> f.apply(f.apply(acc, b), a),
-                (v, a, b, c) -> f.apply(f.apply(f.apply(acc, c), b), a)
+                (v, a, b) -> combine.apply(combine.apply(zero, a), b),
+                (v, a, b, c) -> combine.apply(combine.apply(combine.apply(zero, a), b), c)
             );
         }
 
-        default <T> T foldLeft(Function2<T, A, T> f, T acc) {
+        default <U> U foldRight(U zero, BiFunction<? super A, ? super U, ? extends U> combine) {
             return match(
-                (v, a, b) -> f.apply(f.apply(acc, a), b),
-                (v, a, b, c) -> f.apply(f.apply(f.apply(acc, a), b), c)
+                (v, a, b) -> combine.apply(a, combine.apply(b, zero)),
+                (v, a, b, c) -> combine.apply(a, combine.apply(b, combine.apply(c, zero)))
             );
+        }
+
+        default A reduceLeft(BiFunction<? super A, ? super A, ? extends A> op) {
+            return match(
+                (v, a, b) -> op.apply(a, b),
+                (v, a, b, c) -> op.apply(op.apply(a, b), c)
+            );
+        }
+
+        default Option<A> reduceLeftOption(BiFunction<? super A, ? super A, ? extends A> op) {
+            return Option.some(reduceLeft(op));
+        }
+
+        default A reduceRight(BiFunction<? super A, ? super A, ? extends A> op) {
+            return match(
+                (v, a, b) -> op.apply(a, b),
+                (v, a, b, c) -> op.apply(a, op.apply(b, c))
+            );
+        }
+
+        default Option<A> reduceRightOption(BiFunction<? super A, ? super A, ? extends A> op) {
+            return Option.some(reduceRight(op));
         }
 
         static <A, M>  M measure(Node<A, M> node) {
@@ -65,7 +90,7 @@ public class FingerTreeModule<A, M> {
     }
 
     @Data(flavour = Flavour.Javaslang)
-    public interface Digit<A, M> {
+    public interface Digit<A, M> extends Foldable<A> {
         <X> X match(
             @FieldNames({"v", "a"})
             Function2<M, A, X> one,
@@ -77,22 +102,48 @@ public class FingerTreeModule<A, M> {
             Function5<M, A, A, A, A, X> four
         );
 
-        default <T> T foldRight(Function2<T, A, T> f, T acc) {
+        default <U> U foldLeft(U zero, BiFunction<? super U, ? super A, ? extends U> combine) {
             return match(
-                (v, a) -> f.apply(acc, a),
-                (v, a, b) -> f.apply(f.apply(acc, b), a),
-                (v, a, b, c) -> f.apply(f.apply(f.apply(acc, c), b), a),
-                (v, a, b, c, d) -> f.apply(f.apply(f.apply(f.apply(acc, d), c), b), a)
+                (v, a) -> combine.apply(zero, a),
+                (v, a, b) -> combine.apply(combine.apply(zero, a), b),
+                (v, a, b, c) -> combine.apply(combine.apply(combine.apply(zero, a), b), c),
+                (v, a, b, c, d) -> combine.apply(combine.apply(combine.apply(combine.apply(zero, a), b), c), d)
             );
         }
 
-        default <T> T foldLeft(Function2<T, A, T> f, T acc) {
+        default <U> U foldRight(U zero, BiFunction<? super A, ? super U, ? extends U> combine) {
             return match(
-                (v, a) -> f.apply(acc, a),
-                (v, a, b) -> f.apply(f.apply(acc, a), b),
-                (v, a, b, c) -> f.apply(f.apply(f.apply(acc, a), b), c),
-                (v, a, b, c, d) -> f.apply(f.apply(f.apply(f.apply(acc, a), b), c), d)
+                (v, a) -> combine.apply(a, zero),
+                (v, a, b) -> combine.apply(a, combine.apply(b, zero)),
+                (v, a, b, c) -> combine.apply(a, combine.apply(b, combine.apply(c, zero))),
+                (v, a, b, c, d) -> combine.apply(a, combine.apply(b, combine.apply(c, combine.apply(d, zero))))
             );
+        }
+
+        default A reduceLeft(BiFunction<? super A, ? super A, ? extends A> op) {
+            return match(
+                (v, a) -> a,
+                (v, a, b) -> op.apply(a, b),
+                (v, a, b, c) -> op.apply(op.apply(a, b), c),
+                (v, a, b, c, d) -> op.apply(op.apply(op.apply(a, b), c), d)
+            );
+        }
+
+        default Option<A> reduceLeftOption(BiFunction<? super A, ? super A, ? extends A> op) {
+            return Option.some(reduceLeft(op));
+        }
+
+        default A reduceRight(BiFunction<? super A, ? super A, ? extends A> op) {
+            return match(
+                (v, a) -> a,
+                (v, a, b) -> op.apply(a, b),
+                (v, a, b, c) -> op.apply(a, op.apply(b, c)),
+                (v, a, b, c, d) -> op.apply(a, op.apply(b, op.apply(c, d)))
+            );
+        }
+
+        default Option<A> reduceRightOption(BiFunction<? super A, ? super A, ? extends A> op) {
+            return Option.some(reduceRight(op));
         }
 
         static <A, M> M measure(Digit<A, M> digit) {
@@ -161,9 +212,9 @@ public class FingerTreeModule<A, M> {
         static <A, M> FingerTree<A, M> toTree(Monoid<M> monoid, Function1<A, M> measure, Digit<A, M> digit) {
             return digit.match(
                 (v, a) -> single(a),
-                (v, a, b) -> deep(v, Digit.create(measure, a), nil(), Digit.create(measure, b)),
-                (v, a, b, c) -> deep(v, Digit.create(monoid, measure, a, b), nil(), Digit.create(measure, c)),
-                (v, a, b, c, d) -> deep(v, Digit.create(monoid, measure, a, b, c), nil(), Digit.create(measure, d))
+                (v, a, b) -> deep(v, create(measure, a), nil(), create(measure, b)),
+                (v, a, b, c) -> deep(v, create(monoid, measure, a, b), nil(), create(measure, c)),
+                (v, a, b, c, d) -> deep(v, create(monoid, measure, a, b, c), nil(), create(measure, d))
             );
         }
 
@@ -192,7 +243,7 @@ public class FingerTreeModule<A, M> {
     }
 
     @Data(flavour = Flavour.Javaslang)
-    public interface FingerTree<A, M> {
+    public interface FingerTree<A, M> extends Foldable<A> {
         <X> X match(
             Function0<X> nil,
             @FieldNames({"a"})
@@ -201,20 +252,56 @@ public class FingerTreeModule<A, M> {
             Function4<M, Digit<A, M>, FingerTree<Node<A, M>, M>, Digit<A, M>, X> deep
         );
 
-        default <T> T foldRight(Function2<T, A, T> f, T acc) {
+        default <U> U foldLeft(U zero, BiFunction<? super U, ? super A, ? extends U> combine) {
             return match(
-                () -> acc,
-                (a) -> f.apply(acc, a),
-                (v, pr, m, sf) -> pr.foldRight(f, m.foldRight((t, elt) -> elt.foldRight(f, t), sf.foldRight(f, acc)))
+                () -> zero,
+                (a) -> combine.apply(zero, a),
+                (v, pr, m, sf) -> sf.foldLeft(m.foldLeft(pr.foldLeft(zero, combine), (t, a) -> a.foldLeft(t, combine)), combine)
             );
         }
 
-        default <T> T foldLeft(Function2<T, A, T> f, T acc) {
+        default <U> U foldRight(U zero, BiFunction<? super A, ? super U, ? extends U> combine) {
             return match(
-                () -> acc,
-                (a) -> f.apply(acc, a),
-                (v, pr, m, sf) -> sf.foldLeft(f, m.foldLeft((t, elt) -> elt.foldLeft(f, t), pr.foldLeft(f, acc)))
+                () -> zero,
+                (a) -> combine.apply(a, zero),
+                (v, pr, m, sf) -> pr.foldRight(m.foldRight(sf.foldRight(zero, combine), (a, t) -> a.foldRight(t, combine)), combine)
             );
+        }
+
+        default A reduceLeft(BiFunction<? super A, ? super A, ? extends A> op) {
+            return match(
+                () -> { throw new NoSuchElementException(); },
+                (a) -> a,
+                (v, pr, m, sf) -> sf.foldLeft(m.foldLeft(pr.reduceLeft(op), (t, a) -> a.foldLeft(t, op)), op)
+            );
+        }
+
+        default Option<A> reduceLeftOption(BiFunction<? super A, ? super A, ? extends A> op) {
+            return match(
+                Option::none,
+                Option::some,
+                (v, pr, m, sf) -> Option.some(sf.foldLeft(m.foldLeft(pr.reduceLeft(op), (t, a) -> a.foldLeft(t, op)), op))
+            );
+        }
+
+        default A reduceRight(BiFunction<? super A, ? super A, ? extends A> op) {
+            return match(
+                () -> { throw new NoSuchElementException(); },
+                (a) -> a,
+                (v, pr, m, sf) -> pr.foldRight(m.foldRight(sf.reduceRight(op), (a, t) -> a.foldRight(t, op)), op)
+            );
+        }
+
+        default Option<A> reduceRightOption(BiFunction<? super A, ? super A, ? extends A> op) {
+            return match(
+                Option::none,
+                Option::some,
+                (v, pr, m, sf) -> Option.some(pr.foldRight(m.foldRight(sf.reduceRight(op), (a, t) -> a.foldRight(t, op)), op))
+            );
+        }
+
+        static <A, M> M measure(Monoid<M> monoid, FingerTree<Node<A, M>, M> t) {
+            return measure(monoid, Node::measure, t);
         }
 
         static <A, M> M measure(Monoid<M> monoid, Function1<A, M> measure, FingerTree<A, M> t) {
@@ -311,9 +398,9 @@ public class FingerTreeModule<A, M> {
     @Data(flavour = Flavour.Javaslang)
     public interface View<A, T> {
         <X> X match(
-            Function0<X> vnil,
+            Function0<X> nil,
             @FieldNames({"a", "t"})
-            Function2<A, T, X> vcons
+            Function2<A, T, X> cons
         );
 
         static <A, M> View<Node<A, M>, FingerTree<Node<A, M>, M>> left(Monoid<M> monoid, FingerTree<Node<A, M>, M> t) {
@@ -322,16 +409,16 @@ public class FingerTreeModule<A, M> {
 
         static <A, M> View<A, FingerTree<A, M>> left(Monoid<M> monoid, Function1<A, M> measure, FingerTree<A, M> t) {
             return t.match(
-                () -> vnil(),
-                (a) -> vcons(a, nil()),
+                () -> Views.nil(),
+                (a) -> Views.cons(a, nil()),
                 (v, pr, m, sf) -> pr.match(
-                    (v1, a) -> vcons(a, left(monoid, m).match(
+                    (v1, a) -> Views.cons(a, left(monoid, m).match(
                         () -> Digit.toTree(monoid, measure, sf),
                         (a1, t1) -> FingerTree.create(monoid, Node.toDigit(a1), t1, sf)
                     )),
-                    (v1, a, b) -> vcons(Digit.head(pr), FingerTree.create(monoid, Digit.tail(monoid, measure, pr), m, sf)),
-                    (v1, a, b, c) -> vcons(Digit.head(pr), FingerTree.create(monoid, Digit.tail(monoid, measure, pr), m, sf)),
-                    (v1, a, b, c, d) -> vcons(Digit.head(pr), FingerTree.create(monoid, Digit.tail(monoid, measure, pr), m, sf))
+                    (v1, a, b) -> Views.cons(Digit.head(pr), FingerTree.create(monoid, Digit.tail(monoid, measure, pr), m, sf)),
+                    (v1, a, b, c) -> Views.cons(Digit.head(pr), FingerTree.create(monoid, Digit.tail(monoid, measure, pr), m, sf)),
+                    (v1, a, b, c, d) -> Views.cons(Digit.head(pr), FingerTree.create(monoid, Digit.tail(monoid, measure, pr), m, sf))
                 )
             );
         }
@@ -342,16 +429,16 @@ public class FingerTreeModule<A, M> {
 
         static <A, M> View<A, FingerTree<A, M>> right(Monoid<M> monoid, Function1<A, M> measure, FingerTree<A, M> t) {
             return t.match(
-                () -> vnil(),
-                (a) -> vcons(a, nil()),
+                () -> Views.nil(),
+                (a) -> Views.cons(a, nil()),
                 (v, pr, m, sf) -> pr.match(
-                    (v1, a) -> vcons(a, right(monoid, m).match(
+                    (v1, a) -> Views.cons(a, right(monoid, m).match(
                         () -> Digit.toTree(monoid, measure, pr),
                         (a1, t1) -> FingerTree.create(monoid, pr, t1, Node.toDigit(a1))
                     )),
-                    (v1, a, b) -> vcons(Digit.last(sf), FingerTree.create(monoid, pr, m, Digit.init(monoid, measure, sf))),
-                    (v1, a, b, c) -> vcons(Digit.last(sf), FingerTree.create(monoid, pr, m, Digit.init(monoid, measure, sf))),
-                    (v1, a, b, c, d) -> vcons(Digit.last(sf), FingerTree.create(monoid, pr, m, Digit.init(monoid, measure, sf)))
+                    (v1, a, b) -> Views.cons(Digit.last(sf), FingerTree.create(monoid, pr, m, Digit.init(monoid, measure, sf))),
+                    (v1, a, b, c) -> Views.cons(Digit.last(sf), FingerTree.create(monoid, pr, m, Digit.init(monoid, measure, sf))),
+                    (v1, a, b, c, d) -> Views.cons(Digit.last(sf), FingerTree.create(monoid, pr, m, Digit.init(monoid, measure, sf)))
                 )
             );
         }
@@ -385,5 +472,115 @@ public class FingerTreeModule<A, M> {
             () -> { throw new NoSuchElementException(); },
             (a, t1) -> t1
         );
+    }
+
+    /*---------------------------------*/
+    /*             split               */
+    /*---------------------------------*/
+    @Data(flavour = Flavour.Javaslang)
+    public interface Split<A, T> {
+        <X> X match(
+            @FieldNames({"l", "a", "r"})
+            Function3<T, A, T, X> split
+        );
+
+        static <A, M> Split<A, List<A>> splitDigit(Monoid<M> monoid, Function1<A, M> measure, Predicate<M> p, M i, Digit<A, M> digit) {
+            return digit.match(
+                (v, a) -> Splits.split(List.empty(), a, List.empty()),
+                (v, a, b) -> {
+                    M i1 = monoid.combine(i, (measure.apply(a)));
+                    if (p.test(i1)) return Splits.split(List.empty(), a, List.of(b));
+                    else return Splits.split(List.of(a), b, List.empty());
+                },
+                (v, a, b, c) -> {
+                    M i1 = monoid.combine(i, (measure.apply(a)));
+                    if (p.test(i1)) return Splits.split(List.empty(), a, List.of(b, c));
+                    else {
+                        M i2 = monoid.combine(i1, (measure.apply(b)));
+                        if (p.test(i2)) return Splits.split(List.of(a), b, List.of(c));
+                        else return Splits.split(List.of(a, b), c, List.empty());
+                    }
+                },
+                (v, a, b, c, d) -> {
+                    M i1 = monoid.combine(i, (measure.apply(a)));
+                    if (p.test(i1)) return Splits.split(List.empty(), a, List.of(b, c, d));
+                    else {
+                        M i2 = monoid.combine(i1, (measure.apply(b)));
+                        if (p.test(i2)) return Splits.split(List.of(a), b, List.of(c, d));
+                        else {
+                            M i3 = monoid.combine(i2, (measure.apply(c)));
+                            if (p.test(i3)) return Splits.split(List.of(a, b), c, List.of(d));
+                            else return Splits.split(List.of(a, b, c), d, List.empty());
+                        }
+                    }
+                }
+            );
+        }
+
+        static <A, M> FingerTree<A, M> deepLeft(Monoid<M> monoid, Function1<A, M> measure, List<A> pr, FingerTree<Node<A, M>, M> m, Digit<A, M> sf) {
+            if (pr.isEmpty()) {
+                return View.left(monoid, Node::measure, m).match(
+                        () -> Digit.toTree(monoid, measure, sf),
+                        (a, m1) -> FingerTree.create(monoid, Node.toDigit(a), m1, sf)
+                );
+            } else {
+                return FingerTree.create(monoid, Digit.create(monoid, measure, pr), m, sf);
+            }
+        }
+
+        static <A, M> FingerTree<A, M> deepRight(Monoid<M> monoid, Function1<A, M> measure, Digit<A, M> pr, FingerTree<Node<A, M>, M> m, List<A> sf) {
+            if (sf.isEmpty()) {
+                return View.right(monoid, Node::measure, m).match(
+                        () -> Digit.toTree(monoid, measure, pr),
+                        (a, m1) -> FingerTree.create(monoid, pr, m1, Node.toDigit(a))
+                );
+            } else {
+                return FingerTree.create(monoid, pr, m, Digit.create(monoid, measure, sf));
+            }
+        }
+
+        static <A, M> Split<Node<A, M>, FingerTree<Node<A, M>, M>> splitTree(Monoid<M> monoid, Predicate<M> p, M i, FingerTree<Node<A, M>, M> t) {
+            return splitTree(monoid, Node::measure, p, i, t);
+        }
+
+        static <A, M> Split<A, FingerTree<A, M>> splitTree(Monoid<M> monoid, Function1<A, M> measure, Predicate<M> p, M i, FingerTree<A, M> t) {
+            return t.match(
+                () -> { throw new NoSuchElementException(); },
+                (a) -> Splits.split (nil(), a, nil()),
+                (v, pr, m, sf) -> {
+                    M vpr = monoid.combine(i, Digit.measure(pr));
+                    if (p.test(vpr)) {
+                        return splitDigit(monoid, measure, p, i, pr).match(
+                            (l, x, r) -> Splits.split(FingerTree.create(monoid, measure, l), x, deepLeft(monoid, measure, r, m, sf))
+                        );
+                    } else {
+                        M vm = monoid.combine(vpr, FingerTree.measure(monoid, m));
+                        if (p.test(vm)) {
+                            return splitTree(monoid, p, vpr, m).match(
+                                (ml, xs, mr) -> splitDigit(monoid, measure, p, monoid.combine(vpr, FingerTree.measure(monoid, ml)), Node.toDigit(xs)).match(
+                                    (l, x, r) -> Splits.split(deepRight(monoid, measure, pr, ml, l), x, deepLeft(monoid, measure, r, mr, sf))
+                                )
+                            );
+                        } else {
+                            return splitDigit(monoid, measure, p, vm, sf).match(
+                                (l, x, r) -> Splits.split(deepRight(monoid, measure, pr, m, l), x, FingerTree.create(monoid, measure, r))
+                            );
+                        }
+                    }
+                }
+            );
+        }
+    }
+
+    public Tuple2<FingerTree<A, M>, FingerTree<A, M>> split(Predicate<M> p, FingerTree<A, M> t) {
+        if (isEmpty(t)) {
+            return Tuple.of(nil(), nil());
+        } else if (p.test(FingerTree.measure(monoid, measure, t))) {
+            return Split.splitTree(monoid, measure, p, monoid.zero(), t).match(
+                (l, x, r) -> Tuple.of(l, cons(r, x))
+            );
+        } else {
+            return Tuple.of(t, nil());
+        }
     }
 }
