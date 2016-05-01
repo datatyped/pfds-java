@@ -475,6 +475,82 @@ public class FingerTreeModule<A, M> {
     }
 
     /*---------------------------------*/
+    /*            append               */
+    /*---------------------------------*/
+    private static <A, M> List<Node<A, M>> nodes(Monoid<M> monoid, Function1<A, M> measure, List<A> ts, Digit<A, M> sf2) {
+        if (ts.isEmpty()) {
+            return sf2.match(
+                (v, a) -> { throw new IllegalArgumentException(); },
+                (v, a, b) -> List.of(Node.create(monoid, measure, a, b)),
+                (v, a, b, c) -> List.of(Node.create(monoid, measure, a, b, c)),
+                (v, a, b, c, d) -> List.of(Node.create(monoid, measure, a, b), Node.create(monoid, measure, c, d))
+            );
+        } else {
+            A a = ts.head();
+            List<A> ts2 = ts.tail();
+            if (ts2.isEmpty()) {
+                return sf2.match(
+                    (v, b) -> List.of(Node.create(monoid, measure, a, b)),
+                    (v, b, c) -> List.of(Node.create(monoid, measure, a, b, c)),
+                    (v, b, c, d) -> List.of(Node.create(monoid, measure, a, b), Node.create(monoid, measure, c, d)),
+                    (v, b, c, d, e) -> List.of(Node.create(monoid, measure, a, b, c), Node.create(monoid, measure, d, e))
+                );
+            } else {
+                A b = ts2.head();
+                List<A> ts3 = ts2.tail();
+                if (ts3.isEmpty()) {
+                    return sf2.match(
+                        (v, c) -> List.of(Node.create(monoid, measure, a, b, c)),
+                        (v, c, d) -> List.of(Node.create(monoid, measure, a, b), Node.create(monoid, measure, c, d)),
+                        (v, c, d, e) -> List.of(Node.create(monoid, measure, a, b, c), Node.create(monoid, measure, d, e)),
+                        (v, c, d, e, f) -> List.of(Node.create(monoid, measure, a, b, c), Node.create(monoid, measure, d, e, f))
+                    );
+                } else {
+                    A c = ts3.head();
+                    List<A> ts4 = ts3.tail();
+                    if (ts4.isEmpty()) {
+                        return sf2.match(
+                            (v, d) -> List.of(Node.create(monoid, measure, a, b), Node.create(monoid, measure, c, d)),
+                            (v, d, e) -> List.of(Node.create(monoid, measure, a, b, c), Node.create(monoid, measure, d, e)),
+                            (v, d, e, f) -> List.of(Node.create(monoid, measure, a, b, c), Node.create(monoid, measure, d, e, f)),
+                            (v, d, e, f, g) -> List.of(Node.create(monoid, measure, a, b, c), Node.create(monoid, measure, d, e), Node.create(monoid, measure, f, g))
+                        );
+                    } else {
+                        return nodes(monoid, measure, ts4, sf2).prepend(Node.create(monoid, measure, a, b, c));
+                    }
+                }
+            }
+        }
+    }
+
+    private static <A, M> FingerTree<Node<A, M>, M> append(Monoid<M> monoid, FingerTree<Node<A, M>, M> t1, List<Node<A, M>> elts, FingerTree<Node<A, M>, M> t2) {
+        return append(monoid, Node::measure, t1, elts, t2);
+    }
+
+    private static <A, M> FingerTree<A, M> append(Monoid<M> monoid, Function1<A, M> measure, FingerTree<A, M> t1, List<A> elts, FingerTree<A, M> t2) {
+        return t1.match(
+            () -> elts.foldRight(t2, (elt, acc) -> FingerTree.cons(monoid, measure, acc, elt)),
+            (x1) -> t2.match(
+                () -> elts.foldLeft(t1, (acc, elt) -> FingerTree.snoc(monoid, measure, acc, elt)),
+                (x2) -> FingerTree.cons(monoid, measure, elts.foldRight(t2, (elt, acc) -> FingerTree.cons(monoid, measure, acc, elt)), x1),
+                (v2, pr2, m2, sf2) -> FingerTree.cons(monoid, measure, elts.foldRight(t2, (elt, acc) -> FingerTree.cons(monoid, measure, acc, elt)), x1)
+            ),
+            (v1, pr1, m1, sf1) -> t2.match(
+                () -> elts.foldLeft(t1, (acc, elt) -> FingerTree.snoc(monoid, measure, acc, elt)),
+                (x2) -> FingerTree.snoc(monoid, measure, elts.foldLeft(t1, (acc, elt) -> FingerTree.snoc(monoid, measure, acc, elt)), x2),
+                (v2, pr2, m2, sf2) -> {
+                    List<Node<A, M>> nodes = nodes(monoid, measure, sf1.foldRight(elts, (x, xs) -> xs.prepend(x)), pr2);
+                    return FingerTree.create(monoid, pr1, append(monoid, m1, nodes, m2), sf2);
+                }
+            )
+        );
+    }
+
+    public FingerTree<A, M> append(FingerTree<A, M> t1, FingerTree<A, M> t2) {
+        return append(monoid, measure, t1, List.empty(), t2);
+    }
+
+    /*---------------------------------*/
     /*             split               */
     /*---------------------------------*/
     @Data(flavour = Flavour.Javaslang)
@@ -520,8 +596,8 @@ public class FingerTreeModule<A, M> {
         static <A, M> FingerTree<A, M> deepLeft(Monoid<M> monoid, Function1<A, M> measure, List<A> pr, FingerTree<Node<A, M>, M> m, Digit<A, M> sf) {
             if (pr.isEmpty()) {
                 return View.left(monoid, Node::measure, m).match(
-                        () -> Digit.toTree(monoid, measure, sf),
-                        (a, m1) -> FingerTree.create(monoid, Node.toDigit(a), m1, sf)
+                    () -> Digit.toTree(monoid, measure, sf),
+                    (a, m1) -> FingerTree.create(monoid, Node.toDigit(a), m1, sf)
                 );
             } else {
                 return FingerTree.create(monoid, Digit.create(monoid, measure, pr), m, sf);
@@ -531,8 +607,8 @@ public class FingerTreeModule<A, M> {
         static <A, M> FingerTree<A, M> deepRight(Monoid<M> monoid, Function1<A, M> measure, Digit<A, M> pr, FingerTree<Node<A, M>, M> m, List<A> sf) {
             if (sf.isEmpty()) {
                 return View.right(monoid, Node::measure, m).match(
-                        () -> Digit.toTree(monoid, measure, pr),
-                        (a, m1) -> FingerTree.create(monoid, pr, m1, Node.toDigit(a))
+                    () -> Digit.toTree(monoid, measure, pr),
+                    (a, m1) -> FingerTree.create(monoid, pr, m1, Node.toDigit(a))
                 );
             } else {
                 return FingerTree.create(monoid, pr, m, Digit.create(monoid, measure, sf));
@@ -583,4 +659,6 @@ public class FingerTreeModule<A, M> {
             return Tuple.of(t, nil());
         }
     }
+
+
 }
